@@ -32,11 +32,28 @@
   }
 
   onMount(async () => {
-    // 初始化一些示例进程
-    await addInitialProcesses()
     // 获取初始系统状态
     await refreshSystemState()
+    // 只有在系统中没有进程时才添加示例进程
+    await addInitialProcessesIfEmpty()
   })
+
+  async function addInitialProcessesIfEmpty() {
+    try {
+      // 先检查当前系统状态
+      const response = await fetch('/api/processes')
+      if (response.ok) {
+        const systemState = await response.json()
+        // 只有在没有进程时才添加初始进程
+        if (!systemState.processes || systemState.processes.length === 0) {
+          await addInitialProcesses()
+        }
+      }
+    } catch (error) {
+      console.error('检查系统状态时出错:', error)
+      // 如果检查失败，不添加初始进程，避免重复
+    }
+  }
 
   async function addInitialProcesses() {
     const initialProcesses = [

@@ -40,7 +40,7 @@ router.get('/api/processes', (ctx) => {
 router.post('/api/processes', (ctx) => {
   const { name, burstTime, priority } = ctx.request.body
   const process = processScheduler.addProcess({
-    id: Date.now() + Math.random(),
+    // 不再使用客户端生成的ID，让服务器端生成
     name,
     burstTime: parseInt(burstTime),
     priority: parseInt(priority)
@@ -139,7 +139,7 @@ wss.on('connection', (ws) => {
           break
         case 'process_add':
           const process = processScheduler.addProcess({
-            id: Date.now() + Math.random(),
+            // 不再使用客户端生成的ID，让服务器端生成
             name: data.name,
             burstTime: data.burstTime,
             priority: data.priority

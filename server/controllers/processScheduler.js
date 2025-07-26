@@ -7,15 +7,26 @@ export class ProcessScheduler {
     this.timeQuantum = 2
     this.currentTime = 0
     this.timeSliceCounter = 0 // 用于RR算法的时间片计数
+    this.nextProcessId = 1 // 用于生成唯一的进程ID
   }
 
   addProcess(process) {
+    // 检查是否已存在同名进程，避免重复添加
+    const existingProcess = this.processes.find(p => p.name === process.name)
+    if (existingProcess) {
+      console.log(`进程 ${process.name} 已存在，跳过添加`)
+      return existingProcess
+    }
+
+    // 使用服务器端生成的唯一ID
+    process.id = process.id || this.nextProcessId++
     process.arrivalTime = this.currentTime
     process.remainingTime = process.burstTime
     process.state = 'ready'
     process.waitingTime = 0
     process.turnaroundTime = 0
     this.processes.push(process)
+    console.log(`添加新进程: ${process.name} (ID: ${process.id})`)
     return process
   }
 
@@ -147,6 +158,7 @@ export class ProcessScheduler {
     this.currentProcess = null
     this.currentTime = 0
     this.timeSliceCounter = 0
+    this.nextProcessId = 1 // 重置进程ID计数器
   }
 
   // 设置时间片大小

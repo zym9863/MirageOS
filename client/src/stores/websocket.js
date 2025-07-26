@@ -23,7 +23,19 @@ const createWebSocketStore = () => {
         try {
           const data = JSON.parse(event.data)
           console.log('收到WebSocket消息:', data)
-          // 处理收到的消息
+          
+          // 处理初始化消息，同步进程状态
+          if (data.type === 'init' && data.processState) {
+            // 将接收到的系统状态同步到processStore
+            const { processStore } = await import('./processStore.js')
+            processStore.updateSystemState(data.processState)
+          }
+          
+          // 处理其他消息类型
+          if (data.type === 'response' && data.processState) {
+            const { processStore } = await import('./processStore.js')
+            processStore.updateSystemState(data.processState)
+          }
         } catch (error) {
           console.error('WebSocket消息解析错误:', error)
         }
