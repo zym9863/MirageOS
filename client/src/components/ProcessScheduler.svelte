@@ -1,7 +1,16 @@
 <script>
   import { onMount } from 'svelte'
-  import { processes, currentProcess, schedulingAlgorithm, isRunning, currentTime, processStore } from '../stores/processStore.js'
-  import { wsStore } from '../stores/websocket.js'
+  import {
+    processes,
+    currentProcess,
+    schedulingAlgorithm,
+    isRunning,
+    currentTime,
+    timeQuantum as storeTimeQuantum,
+    schedulingStats,
+    isSimulationCompleted,
+    processStore
+  } from '../stores/processStore.js'
   
   let processName = ''
   let burstTime = 5
@@ -10,32 +19,133 @@
   let simulationSpeed = 1000
   let simulationInterval = null
 
-  $: ganttChart = generateGanttChart($processes, $currentTime)
+  $: ganttChart = generateGanttChart($processes)
 
-  onMount(() => {
+  // 响应式更新调度算法
+  $: if ($schedulingAlgorithm) {
+    updateSchedulingAlgorithm($schedulingAlgorithm)
+  }
+
+  // 响应式更新时间片
+  $: if (timeQuantum && $schedulingAlgorithm === 'RR') {
+    updateTimeQuantum(timeQuantum)
+  }
+
+  onMount(async () => {
     // 初始化一些示例进程
-    processStore.addProcess({ name: 'P1', burstTime: 8, priority: 3 })
-    processStore.addProcess({ name: 'P2', burstTime: 4, priority: 1 })
-    processStore.addProcess({ name: 'P3', burstTime: 9, priority: 2 })
+    await addInitialProcesses()
+    // 获取初始系统状态
+    await refreshSystemState()
   })
 
-  function addProcess() {
-    if (processName.trim() && burstTime > 0) {
-      processStore.addProcess({
-        name: processName.trim(),
-        burstTime: parseInt(burstTime),
-        priority: parseInt(priority)
-      })
-      
-      // 清空表单
-      processName = ''
-      burstTime = 5
-      priority = 1
+  async function addInitialProcesses() {
+    const initialProcesses = [
+      { name: 'P1', burstTime: 8, priority: 3 },
+      { name: 'P2', burstTime: 4, priority: 1 },
+      { name: 'P3', burstTime: 9, priority: 2 }
+    ]
+
+    for (const proc of initialProcesses) {
+      try {
+        await fetch('/api/processes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(proc)
+        })
+      } catch (error) {
+        console.error('添加初始进程时出错:', error)
+      }
     }
   }
 
-  function removeProcess(processId) {
-    processStore.removeProcess(processId)
+  async function updateSchedulingAlgorithm(algorithm) {
+    try {
+      await fetch('/api/processes/algorithm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ algorithm })
+      })
+    } catch (error) {
+      console.error('更新调度算法时出错:', error)
+    }
+  }
+
+  async function updateTimeQuantum(quantum) {
+    try {
+      await fetch('/api/processes/time-quantum', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ timeQuantum: quantum })
+      })
+    } catch (error) {
+      console.error('更新时间片时出错:', error)
+    }
+  }
+
+  async function addProcess() {
+    if (processName.trim() && burstTime > 0) {
+      try {
+        const response = await fetch('/api/processes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: processName.trim(),
+            burstTime: parseInt(burstTime),
+            priority: parseInt(priority)
+          })
+        })
+
+        if (response.ok) {
+          // 获取最新的系统状态
+          await refreshSystemState()
+
+          // 清空表单
+          processName = ''
+          burstTime = 5
+          priority = 1
+        } else {
+          console.error('添加进程失败')
+        }
+      } catch (error) {
+        console.error('添加进程时出错:', error)
+      }
+    }
+  }
+
+  async function removeProcess(processId) {
+    try {
+      const response = await fetch(`/api/processes/${processId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        await refreshSystemState()
+      } else {
+        console.error('删除进程失败')
+      }
+    } catch (error) {
+      console.error('删除进程时出错:', error)
+    }
+  }
+
+  async function refreshSystemState() {
+    try {
+      const response = await fetch('/api/processes')
+      if (response.ok) {
+        const systemState = await response.json()
+        updateClientState(systemState)
+      }
+    } catch (error) {
+      console.error('刷新系统状态时出错:', error)
+    }
   }
 
   function startSimulation() {
@@ -55,87 +165,72 @@
     }
   }
 
-  function resetSimulation() {
+  async function resetSimulation() {
     pauseSimulation()
-    currentTime.set(0)
-    currentProcess.set(null)
-    
-    // 重置所有进程状态
-    processes.update(list => 
-      list.map(p => ({
-        ...p,
-        state: 'ready',
-        remainingTime: p.burstTime,
-        waitingTime: 0,
-        turnaroundTime: 0
-      }))
-    )
+
+    try {
+      const response = await fetch('/api/processes/reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        updateClientState(result.state)
+      } else {
+        console.error('重置模拟失败')
+      }
+    } catch (error) {
+      console.error('重置模拟时出错:', error)
+    }
   }
 
-  function executeSchedulingStep() {
-    const readyProcesses = $processes.filter(p => p.state === 'ready')
-    
-    if (readyProcesses.length === 0 && !$currentProcess) {
+  async function executeSchedulingStep() {
+    try {
+      // 调用服务器端API执行调度步骤
+      const response = await fetch('/api/processes/step', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('调度步骤执行失败')
+      }
+
+      const systemState = await response.json()
+
+      // 更新客户端状态
+      updateClientState(systemState)
+
+      // 检查是否所有进程都已完成
+      if (systemState.isCompleted) {
+        pauseSimulation()
+        console.log('所有进程已完成执行')
+      }
+
+    } catch (error) {
+      console.error('执行调度步骤时出错:', error)
       pauseSimulation()
-      return
-    }
-
-    // 选择下一个进程
-    if (!$currentProcess) {
-      const nextProcess = selectNextProcess(readyProcesses)
-      if (nextProcess) {
-        currentProcess.set(nextProcess)
-        processStore.updateProcess(nextProcess.id, { state: 'running' })
-      }
-    }
-
-    // 执行当前进程
-    if ($currentProcess) {
-      const remaining = $currentProcess.remainingTime - 1
-      processStore.updateProcess($currentProcess.id, { remainingTime: remaining })
-      
-      if (remaining <= 0) {
-        processStore.updateProcess($currentProcess.id, { 
-          state: 'terminated',
-          turnaroundTime: $currentTime + 1
-        })
-        currentProcess.set(null)
-      } else if ($schedulingAlgorithm === 'RR' && ($currentTime + 1) % timeQuantum === 0) {
-        processStore.updateProcess($currentProcess.id, { state: 'ready' })
-        currentProcess.set(null)
-      }
-    }
-
-    // 更新等待时间
-    $processes.forEach(p => {
-      if (p.state === 'ready') {
-        processStore.updateProcess(p.id, { 
-          waitingTime: p.waitingTime + 1 
-        })
-      }
-    })
-
-    currentTime.update(t => t + 1)
-  }
-
-  function selectNextProcess(readyProcesses) {
-    if (readyProcesses.length === 0) return null
-
-    switch ($schedulingAlgorithm) {
-      case 'FCFS':
-        return readyProcesses.sort((a, b) => a.arrivalTime - b.arrivalTime)[0]
-      case 'SJF':
-        return readyProcesses.sort((a, b) => a.remainingTime - b.remainingTime)[0]
-      case 'Priority':
-        return readyProcesses.sort((a, b) => b.priority - a.priority)[0]
-      case 'RR':
-        return readyProcesses[0]
-      default:
-        return readyProcesses[0]
     }
   }
 
-  function generateGanttChart(processes, currentTime) {
+  function updateClientState(systemState) {
+    // 使用新的统一状态更新函数
+    processStore.updateSystemState(systemState)
+
+    // 同步本地时间片变量
+    if (systemState.timeQuantum && systemState.timeQuantum !== timeQuantum) {
+      timeQuantum = systemState.timeQuantum
+    }
+  }
+
+
+
+  function generateGanttChart(processes) {
     // 简化的甘特图数据生成
     return processes.map(p => ({
       name: p.name,
@@ -244,6 +339,14 @@
       <p><strong>运行状态:</strong> {$isRunning ? '运行中' : '已暂停'}</p>
       {#if $currentProcess}
         <p><strong>当前进程:</strong> {$currentProcess.name}</p>
+      {/if}
+      {#if $schedulingStats}
+        <p><strong>已完成进程:</strong> {$schedulingStats.completedProcesses}/{$schedulingStats.totalProcesses}</p>
+        <p><strong>平均等待时间:</strong> {$schedulingStats.averageWaitingTime.toFixed(2)}</p>
+        <p><strong>平均周转时间:</strong> {$schedulingStats.averageTurnaroundTime.toFixed(2)}</p>
+      {/if}
+      {#if $isSimulationCompleted}
+        <p class="completion-notice"><strong>🎉 所有进程已完成执行！</strong></p>
       {/if}
     </div>
   </div>

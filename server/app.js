@@ -66,6 +66,23 @@ router.post('/api/processes/algorithm', (ctx) => {
   ctx.body = { success: true, algorithm }
 })
 
+router.post('/api/processes/reset', (ctx) => {
+  processScheduler.reset()
+  ctx.body = { success: true, state: processScheduler.getSystemState() }
+})
+
+// 清空所有进程
+router.post('/api/processes/clear', (ctx) => {
+  processScheduler.clear()
+  ctx.body = { success: true, state: processScheduler.getSystemState() }
+})
+
+router.post('/api/processes/time-quantum', (ctx) => {
+  const { timeQuantum } = ctx.request.body
+  processScheduler.setTimeQuantum(parseInt(timeQuantum))
+  ctx.body = { success: true, timeQuantum: parseInt(timeQuantum) }
+})
+
 // 内存管理API
 router.get('/api/memory', (ctx) => {
   ctx.body = memoryManager.getMemoryState()
