@@ -19,7 +19,7 @@ const createWebSocketStore = () => {
         set(ws)
       }
       
-      ws.onmessage = (event) => {
+      ws.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data)
           console.log('收到WebSocket消息:', data)
