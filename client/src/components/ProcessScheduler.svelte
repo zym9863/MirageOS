@@ -420,23 +420,35 @@
   }
 
   .controls-section, .visualization-section {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 15px;
+    background: var(--bg-primary);
+    border-radius: 20px;
     padding: 2rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-xl);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+  }
+
+  .controls-section:hover, .visualization-section:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: translateY(-2px);
   }
 
   h2 {
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   h3 {
-    color: #555;
+    color: var(--text-secondary);
     margin: 1.5rem 0 1rem 0;
     font-size: 1.2rem;
+    font-weight: 500;
   }
 
   .control-group {
@@ -446,17 +458,34 @@
   .control-group label {
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: bold;
-    color: #555;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   select, input {
-    padding: 0.75rem;
-    border: 2px solid #ddd;
-    border-radius: 8px;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
     font-size: 1rem;
     width: 100%;
     box-sizing: border-box;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+  }
+
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background: var(--bg-tertiary);
+  }
+
+  select:hover, input:hover {
+    border-color: var(--text-muted);
   }
 
   .input-group {
@@ -467,18 +496,29 @@
   }
 
   .add-btn {
-    padding: 0.75rem 1rem;
-    background: #4caf50;
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, var(--success-color), #059669);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s ease;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-md);
   }
 
   .add-btn:hover {
-    background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    background: linear-gradient(135deg, #059669, var(--success-color));
+  }
+
+  .add-btn:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-md);
   }
 
   .simulation-controls {
@@ -488,84 +528,131 @@
   }
 
   .control-btn {
-    padding: 0.75rem 1.5rem;
+    padding: 0.875rem 1.75rem;
     border: none;
-    border-radius: 25px;
-    font-size: 1rem;
-    font-weight: bold;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
   }
 
   .start-btn {
-    background: #4caf50;
+    background: linear-gradient(135deg, var(--success-color), #059669);
     color: white;
   }
 
   .pause-btn {
-    background: #ff9800;
+    background: linear-gradient(135deg, var(--warning-color), #d97706);
     color: white;
   }
 
   .reset-btn {
-    background: #f44336;
+    background: linear-gradient(135deg, var(--error-color), #dc2626);
     color: white;
   }
 
   .control-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none !important;
   }
 
   .control-btn:not(:disabled):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .control-btn:not(:disabled):active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
   }
 
   .status-info {
-    background: #f5f5f5;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-top: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-top: 1.5rem;
+    backdrop-filter: blur(10px);
   }
 
   .status-info p {
-    margin: 0.5rem 0;
-    color: #666;
+    margin: 0.75rem 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status-info strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .completion-notice {
+    background: linear-gradient(135deg, var(--success-color), #059669);
+    color: white;
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 600;
+    margin-top: 1rem;
+    animation: pulseGlow 2s infinite;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+    50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
   }
 
   .process-table {
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
     overflow: hidden;
+    background: var(--bg-secondary);
+    backdrop-filter: blur(10px);
   }
 
   .table-header, .table-row {
     display: grid;
     grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr 1fr auto;
     gap: 1rem;
-    padding: 1rem;
+    padding: 1.25rem;
     align-items: center;
   }
 
   .table-header {
-    background: #f8f9fa;
-    font-weight: bold;
-    color: #333;
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   .table-row {
-    border-top: 1px solid #eee;
-    transition: background 0.3s ease;
+    border-top: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    color: var(--text-secondary);
   }
 
   .table-row:hover {
-    background: #f8f9fa;
+    background: var(--bg-tertiary);
+    transform: translateX(4px);
   }
 
   .table-row.current {
-    background: #e3f2fd;
-    border-left: 4px solid #2196f3;
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 4px solid var(--primary-color);
+    color: var(--text-primary);
+    box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.1);
   }
 
   .process-name {
@@ -574,33 +661,45 @@
   }
 
   .status {
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
     text-align: center;
-    font-size: 0.85rem;
-    font-weight: bold;
+    font-size: 0.75rem;
+    font-weight: 600;
     color: white;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: var(--shadow-sm);
+    min-width: 60px;
   }
 
   .remove-btn {
-    background: #f44336;
+    background: linear-gradient(135deg, var(--error-color), #dc2626);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    box-shadow: var(--shadow-sm);
   }
 
   .remove-btn:hover:not(:disabled) {
-    background: #d32f2f;
+    background: linear-gradient(135deg, #dc2626, var(--error-color));
+    transform: scale(1.1);
+    box-shadow: var(--shadow-md);
   }
 
   .remove-btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+    transform: none !important;
   }
 
   .chart-container {
@@ -614,49 +713,126 @@
     grid-template-columns: 100px 1fr 60px;
     gap: 1rem;
     align-items: center;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+  }
+
+  .gantt-item:hover {
+    background: var(--bg-tertiary);
+    transform: translateX(4px);
   }
 
   .process-label {
-    font-weight: bold;
-    color: #333;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
   }
 
   .progress-bar {
-    height: 30px;
-    background: #e0e0e0;
-    border-radius: 15px;
+    height: 24px;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
     overflow: hidden;
     position: relative;
+    border: 1px solid var(--border-color);
   }
 
   .progress-fill {
     height: 100%;
-    transition: width 0.5s ease;
-    border-radius: 15px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 
   .progress-text {
     text-align: center;
-    font-weight: bold;
-    color: #666;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
   }
 
   @media (max-width: 1024px) {
     .scheduler-container {
       grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    
+    .controls-section, .visualization-section {
+      padding: 1.5rem;
+      margin: 0 1rem;
     }
     
     .input-group {
       grid-template-columns: 1fr;
+      gap: 1rem;
     }
     
+    .simulation-controls {
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    
+    .control-btn {
+      flex: 1;
+      min-width: 120px;
+    }
+  }
+
+  @media (max-width: 768px) {
     .table-header, .table-row {
       grid-template-columns: 1fr;
       gap: 0.5rem;
+      padding: 1rem;
+    }
+    
+    .table-header {
+      display: none;
+    }
+    
+    .table-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1.5rem;
+      position: relative;
+    }
+    
+    .table-row::before {
+      content: attr(data-process);
+      font-weight: 600;
+      color: var(--primary-color);
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
     }
     
     .gantt-item {
       grid-template-columns: 1fr;
+      gap: 0.75rem;
+      text-align: center;
+    }
+    
+    .chart-container {
+      gap: 1rem;
     }
   }
 </style>
