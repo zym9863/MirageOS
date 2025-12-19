@@ -13,9 +13,21 @@ import { MemoryManager } from './controllers/memoryManager.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// 初始化系统组件
-const processScheduler = new ProcessScheduler()
-const memoryManager = new MemoryManager(1024)
+// 日志发射器函数，用于向所有 WebSocket 客户端广播日志
+const broadcastLog = (logData) => {
+  wss.clients.forEach((client) => {
+    if (client.readyState === client.OPEN) {
+      client.send(JSON.stringify({
+        type: 'log',
+        log: logData
+      }))
+    }
+  })
+}
+
+// 初始化系统组件，传入日志发射器
+const processScheduler = new ProcessScheduler(broadcastLog)
+const memoryManager = new MemoryManager(1024, broadcastLog)
 
 const app = new Koa()
 const router = new Router()
