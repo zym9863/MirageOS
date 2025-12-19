@@ -1,6 +1,7 @@
 <script>
   import ProcessScheduler from './components/ProcessScheduler.svelte'
   import MemoryManager from './components/MemoryManager.svelte'
+  import LogPanel from './components/LogPanel.svelte'
   import { onMount } from 'svelte'
   import { wsStore } from './stores/websocket.js'
   import { fade, slide } from 'svelte/transition'
@@ -87,6 +88,11 @@
         </div>
       {/if}
     {/if}
+  </div>
+
+  <!-- 系统运行日志面板 -->
+  <div class="log-container">
+    <LogPanel />
   </div>
 </main>
 
@@ -300,6 +306,10 @@
     }
   }
 
+  .log-container {
+    padding: 0 2rem 2rem 2rem;
+  }
+
   @media (max-width: 768px) {
     header {
       padding: 1rem;
@@ -327,6 +337,10 @@
 
     .content {
       padding: 1rem;
+    }
+
+    .log-container {
+      padding: 0 1rem 1rem 1rem;
     }
   }
 </style>

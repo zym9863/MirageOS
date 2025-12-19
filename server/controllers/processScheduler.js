@@ -1,6 +1,6 @@
 // 进程调度控制器
 export class ProcessScheduler {
-  constructor() {
+  constructor(logEmitter = null) {
     this.processes = []
     this.currentProcess = null
     this.schedulingAlgorithm = 'FCFS'
@@ -8,13 +8,28 @@ export class ProcessScheduler {
     this.currentTime = 0
     this.timeSliceCounter = 0 // 用于RR算法的时间片计数
     this.nextProcessId = 1 // 用于生成唯一的进程ID
+    this.logEmitter = logEmitter // 日志发射器，用于广播日志
+  }
+
+  // 生成并发送日志
+  log(action, details) {
+    if (this.logEmitter) {
+      this.logEmitter({
+        timestamp: new Date().toISOString(),
+        module: '进程',
+        action,
+        details
+      })
+    }
+    // 同时保留控制台输出
+    console.log(`[进程] ${action}:`, details)
   }
 
   addProcess(process) {
     // 检查是否已存在同名进程，避免重复添加
     const existingProcess = this.processes.find(p => p.name === process.name)
     if (existingProcess) {
-      console.log(`进程 ${process.name} 已存在，跳过添加`)
+      this.log('进程已存在', `进程 ${process.name} 已存在，跳过添加`)
       return existingProcess
     }
 
@@ -26,12 +41,13 @@ export class ProcessScheduler {
     process.waitingTime = 0
     process.turnaroundTime = 0
     this.processes.push(process)
-    console.log(`添加新进程: ${process.name} (ID: ${process.id})`)
+    this.log('创建进程', `添加新进程: ${process.name} (ID: ${process.id})`)
     return process
   }
 
   removeProcess(processId) {
     this.processes = this.processes.filter(p => p.id !== processId)
+    this.log('销毁进程', `移除进程 ID: ${processId}`)
     // 如果删除的是当前进程，清空当前进程
     if (this.currentProcess && this.currentProcess.id === processId) {
       this.currentProcess = null
@@ -41,6 +57,7 @@ export class ProcessScheduler {
 
   setSchedulingAlgorithm(algorithm) {
     this.schedulingAlgorithm = algorithm
+    this.log('调度算法变更', `切换至: ${algorithm}`)
     // 切换算法时重置当前进程和时间片计数
     if (this.currentProcess && this.currentProcess.state === 'running') {
       this.currentProcess.state = 'ready'
@@ -104,6 +121,7 @@ export class ProcessScheduler {
       this.currentProcess = this.getNextProcess()
       if (this.currentProcess) {
         this.currentProcess.state = 'running'
+        this.log('进程状态变更', `进程 ${this.currentProcess.name} (ID: ${this.currentProcess.id}) 变为运行状态`)
         this.timeSliceCounter = 0 // 重置时间片计数
       }
     }
@@ -115,6 +133,7 @@ export class ProcessScheduler {
 
       // 检查进程是否完成
       if (this.currentProcess.remainingTime <= 0) {
+        this.log('进程完成', `进程 ${this.currentProcess.name} (ID: ${this.currentProcess.id}) 执行完成`)
         this.currentProcess.state = 'terminated'
         this.currentProcess.turnaroundTime = this.currentTime + 1
         this.currentProcess = null
@@ -122,6 +141,7 @@ export class ProcessScheduler {
       }
       // 检查时间片轮转是否需要切换进程
       else if (this.schedulingAlgorithm === 'RR' && this.timeSliceCounter >= this.timeQuantum) {
+        this.log('时间片耗尽', `进程 ${this.currentProcess.name} (ID: ${this.currentProcess.id}) 时间片耗尽，转为就绪状态`)
         this.currentProcess.state = 'ready'
         this.currentProcess = null
         this.timeSliceCounter = 0
@@ -150,6 +170,7 @@ export class ProcessScheduler {
     this.currentProcess = null
     this.currentTime = 0
     this.timeSliceCounter = 0
+    this.log('系统重置', '进程调度器已重置')
   }
 
   // 清空所有进程并重置状态
@@ -159,6 +180,7 @@ export class ProcessScheduler {
     this.currentTime = 0
     this.timeSliceCounter = 0
     this.nextProcessId = 1 // 重置进程ID计数器
+    this.log('清空进程', '所有进程已清空')
   }
 
   // 设置时间片大小
